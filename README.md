@@ -4,7 +4,7 @@
 - Please follow README under "create_lmdb_dataset" folder
 
 ## Pretrained Models:
-- You can find the pretrained models for V4 printed for 13 languages under the [Assets](https://github.com/NLTM-IIITH/OCR-V4/releases/tag/v4).
+- You can find the pretrained models for V4 printed for 13 languages under the [Assets](https://github.com/NLTM-OCR/OCR-V4/releases/tag/v4).
 
 ## Setup
 - Using Python = 3.10+
