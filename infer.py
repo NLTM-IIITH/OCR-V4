@@ -1,39 +1,31 @@
 import json
 import os
+from tempfile import TemporaryDirectory
+from os.path import join
+import argparse
 import sys
+from create_lmdb import createDataset
 
 
-def main(modality, lang):
-	"""
-	There is a bug in the V2 OCR where if we only give one word image as input,
-	then the output of the ocr will only contain the first character of the word,
-	instead of the complete word, while the OCR is working perfectly fine when
-	the number of input word images > 1.
-	The issue appears to be on ajoy side's in the testing code somewhere.
-	for now, I added a dummy word image (hindi) called "-1.jpg" so that the OCR will
-	always get >1 word images as input, and I remove the dummy image inference
-	when creating the out.json file finally.
-	"""
-	if lang in ['hindi', 'marathi'] and modality in ['handwritten', 'scenetext']:
-		os.system(f'rm -f /app/alphabet/{lang}_lexicon.txt')
-		os.system(f'mv /app/alphabet/{lang}_{modality}_lexicon.txt /app/alphabet/{lang}_lexicon.txt')
-	os.makedirs('/lmdb')
-	os.makedirs('/out')
-	# adding a dummy image, creating the lmdb, then removing the dummy image.
-	os.system('cp /app/testing/-1.jpg /data')
-	os.system('python create_lmdb.py')
-	os.system('rm -rf /data/-1.jpg')
+def main(args):
+	modality = 'printed'
+	lang = args.language
+	lmdb_dir = TemporaryDirectory(prefix='lmdb')
+	out_dir = TemporaryDirectory(prefix='out')
+
+	# creating LMDB dataset
+	createDataset(lmdb_dir.name, args.test_dir)
 	command = [
-		'python lang_train.py',
+		join(args.venv_path, 'bin/python') + ' lang_train.py',
 		'--mode test',
 		'--lang {}'.format(lang),
-		'--pretrained /model/out/crnn_results/best_cer.pth',
-		'--valRoot /lmdb',
-		'--out /out',
+		'--pretrained ' + join(args.model_dir, 'out/crnn_results/best_cer.pth'),
+		f'--valRoot {lmdb_dir.name}',
+		f'--out {out_dir.name}',
 		'--cuda --adadelta'
 	]
 	os.system(' '.join(command))
-	with open('/out/test_gt_and_predicted_text.txt', 'r') as f:
+	with open(join(args.out_dir, 'test_gt_and_predicted_text.txt'), 'r') as f:
 		b = f.readlines()
 	a = []
 	for i in b:
@@ -41,10 +33,7 @@ def main(modality, lang):
 		if x.endswith('.jpg'):
 			x = ''
 		a.append(x)
-	# a = [i.strip().split('\t')[-1] for i in a]
-	# first line in the inference is deleted because its the OCR output of dummy image.
-	del a[0]
-	b = os.listdir('/data')
+	b = os.listdir(args.test_dir)
 	try:
 		b = sorted(b, key=lambda x:int(x.strip().split('.')[0]))
 	except:
@@ -55,9 +44,17 @@ def main(modality, lang):
 			ret[b[i]] = a[i]
 		except:
 			ret[b[i]] = ''
-	with open('/data/out.json', 'w', encoding='utf-8') as f:
-		f.write(json.dumps(ret))
+	with open(join(args.out_dir, 'out.json'), 'w', encoding='utf-8') as f:
+		f.write(json.dumps(ret, indent=4))
 
 if __name__ == '__main__':
-	main(sys.argv[-2] ,sys.argv[-1])
+	parser = argparse.ArgumentParser(description='Printed OCR')
+	parser.add_argument('--model_dir', type=str, help='Path to pretrained model directory')
+	parser.add_argument('--test_dir', type=str, help='Path to input images directory')
+	parser.add_argument('--out_dir', type=str, help='Path to directory where to store the JSON OCR output')
+	parser.add_argument('--language', type=str, help='Language of the input images')
+	parser.add_argument('--venv_path', type=str, help='Path to the virtual env of python')
+	args = parser.parse_args()
+
+	main(args)
 
