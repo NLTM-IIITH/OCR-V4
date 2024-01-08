@@ -89,6 +89,7 @@ def createDataset(outputPath='/lmdb', parentDirofImages='/data'):
 	print('Created dataset with %d samples' % nSamples)
 
 if __name__=="__main__":
+	pass
 	# parser = argparse.ArgumentParser()
 	# parser.add_argument('--out', type = str, required = True, help = 'lmdb data output path')
 	# parser.add_argument('--folder', type = str, help = 'path to folder which contains the images')
