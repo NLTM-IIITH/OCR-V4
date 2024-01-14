@@ -23,21 +23,20 @@ python3 lang_train.py --mode test --lang bengali --valRoot  bengali/test_lmdb --
 - Path "out/max_prob" folder containing ".csv" file corresponding to each test word image. It provides probability values of predicted characters.
 - Path "out/data_prob" folder containing ".csv" file corresponding to each test word image. It provides a matrix of probability values of a test word image. Matrix dimention is (no of characters) x (length of word). If (iii) and (iv) are not required, you can skip them.    
 
-## Inference
+## Inference (New)
 
-For Inference please call the `infer.py` file. The OCR outputs are generated in JSON file and saved in the directory specified by `out_dir` argument.
+For Inference please call the `new_infer.py` file. The OCR outputs are generated in TXT file and saved in the directory specified by `out_dir` argument.
 
 ### Arguments
-* `--model_dir`: Path to pretrained model directory
-* `--test_dir`: Path to directory with input images
-* `--out_dir`: Path to folder where JSON OCR output is saved.
+* `--pretrained`: Path to pretrained model file (.pth)
+* `--test_root`: Path to directory with input images
+* `--out_dir`: Path to folder where TXT OCR output is saved.
 * `--language`: language of the input images
-* `--venv_path`: Path to python virtual environment with all the requirements installed.
 
 ### Example
 
 ```bash
-python infer.py --model_dir=/home/ocr/model --test_dir=/home/ocr/data --language=bengali --out_dir=/home/ocr/out --venv_path=/home/ocr/venv
+python new_infer.py --pretrained=/home/ocr/model/best_cer.pth --test_root=/home/ocr/data --language=bengali --out_dir=/home/ocr/out
 ```
 
 ## Contact
