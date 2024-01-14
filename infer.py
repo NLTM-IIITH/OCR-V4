@@ -1,14 +1,13 @@
+import argparse
 import json
 import os
-from tempfile import TemporaryDirectory
 from os.path import join
-import argparse
-import sys
+from tempfile import TemporaryDirectory
+
 from create_lmdb import createDataset
 
 
 def main(args):
-	modality = 'printed'
 	lang = args.language
 	lmdb_dir = TemporaryDirectory(prefix='lmdb')
 	out_dir = TemporaryDirectory(prefix='out')
@@ -20,12 +19,13 @@ def main(args):
 		'--mode test',
 		'--lang {}'.format(lang),
 		'--pretrained ' + join(args.model_dir, 'out/crnn_results/best_cer.pth'),
-		f'--valRoot {lmdb_dir.name}',
+		# f'--valRoot {lmdb_dir.name}',
+		f'--valRoot {args.test_dir}',
 		f'--out {out_dir.name}',
 		'--cuda --adadelta'
 	]
 	os.system(' '.join(command))
-	with open(join(args.out_dir, 'test_gt_and_predicted_text.txt'), 'r') as f:
+	with open(join(out_dir.name, 'test_gt_and_predicted_text.txt'), 'r') as f:
 		b = f.readlines()
 	a = []
 	for i in b:

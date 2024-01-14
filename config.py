@@ -1,9 +1,9 @@
-from __future__ import print_function
-from __future__ import division
+from __future__ import division, print_function
 
 import argparse
-import random
 import os
+import random
+
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn

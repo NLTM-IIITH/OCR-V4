@@ -1,13 +1,13 @@
-import sys
-import os
-from base_train import *
-from config import *
-
-from torchvision.transforms import Compose, ColorJitter, RandomApply
-from datasets.imprint_dataset import Rescale as IRescale
-from datasets.grid_distort import GD
-
 import warnings
+
+from torchvision.transforms import ColorJitter, Compose, RandomApply
+
+from config import *
+from datasets.grid_distort import GD
+from datasets.imprint_dataset import Rescale as IRescale
+# from base_train import *
+from new_infer import *
+
 warnings.filterwarnings("ignore")
 
 opt = parser.parse_args()
@@ -36,24 +36,24 @@ opt.STN_type = 'TPS'
 opt.tps_inputsize = [48, 128]
 opt.tps_outputsize = [96, 256]
 
-htr = BaseHTR(opt, dataset_name)
-htr.nheads = 1
+htr = BaseHTR(opt, opt.valRoot, opt.cuda)
+# htr.nheads = 1
 
-l1 = ['assamese','bengali', 'bodo', 'english','gujarati','gurumukhi','hindi','manipuri','marathi','oriya','urdu'] # indo-aryan languages smaller wdith
-l2 = ['kannada','malayalam','tamil','telugu'] #indo-drabirian language 
+# l1 = ['assamese','bengali', 'bodo', 'english','gujarati','gurumukhi','hindi','manipuri','marathi','oriya','urdu'] # indo-aryan languages smaller wdith
+# l2 = ['kannada','malayalam','tamil','telugu'] #indo-drabirian language 
 
-if lang in l1:
-	elastic_alpha = 0.3
-else:
-	elastic_alpha = 0.2
-htr.train_transforms = Compose([
-								GD(0.5),
-								IRescale(max_width=htr.opt.imgW, height=htr.opt.imgH),
-								ElasticTransformation(0.5, alpha=elastic_alpha),
-								AffineTransformation(0.5, rotate=5, shear=0.5),
-								RandomApply([ColorJitter(brightness=0.5, contrast=0.5)], p=0.5),
-								ToTensor()])
+# if lang in l1:
+# 	elastic_alpha = 0.3
+# else:
+# 	elastic_alpha = 0.2
+# htr.train_transforms = Compose([
+# 								GD(0.5),
+# 								IRescale(max_width=htr.opt.imgW, height=htr.opt.imgH),
+# 								ElasticTransformation(0.5, alpha=elastic_alpha),
+# 								AffineTransformation(0.5, rotate=5, shear=0.5),
+# 								RandomApply([ColorJitter(brightness=0.5, contrast=0.5)], p=0.5),
+# 								ToTensor()])
 
-htr.test_transforms = Compose([IRescale(max_width=htr.opt.imgW, height=htr.opt.imgH),
-							   ToTensor()])
-htr.run()
+# htr.test_transforms = Compose([IRescale(max_width=htr.opt.imgW, height=htr.opt.imgH),
+# 							   ToTensor()])
+# htr.run()

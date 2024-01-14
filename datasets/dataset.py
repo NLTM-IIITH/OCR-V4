@@ -1,23 +1,102 @@
 from __future__ import absolute_import
-from PIL import Image, ImageFile
-from torch.utils.data import Dataset
-import sys
-from PIL import Image
-import numpy as np
-import pdb
-import cv2
-import numpy as np
+
+import os
 import random
+from os.path import basename, join, splitext
+
+import cv2
 import lmdb
+import numpy as np
 import six
-import re
 import torch
+from PIL import Image, ImageFile
 from torch.utils import data
 from torch.utils.data import sampler
 from torchvision import transforms
+
 from utils import get_vocabulary, to_numpy
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+
+class ImageDataset(data.Dataset):
+    def __init__(self, root, voc, num_samples=np.inf,
+                 transform=None, label_transform=None,
+                 voc_type='file', lowercase=False,
+                 alphanumeric=False, ctc_blank='<b>',
+                 return_list=True):
+        super(ImageDataset, self).__init__()
+
+        # self.env = lmdb.open(root, max_readers=100, readonly=True)
+        # assert self.env is not None, "cannot create lmdb from %s" % root
+        # self.txn = self.env.begin()
+        self.root = root
+
+        self.voc = voc
+        self.transform = transform
+        self.label_transform = label_transform
+        self.nSamples = len(self.get_images(root))
+        # self.nSamples = int(float(self.txn.get(b"num-samples")))
+        self.nSamples = min(self.nSamples, num_samples)
+
+        self.voc = get_vocabulary(voc, voc_type, lowercase, alphanumeric)
+        self.char2id = dict(zip(self.voc, range(1, len(self.voc)+1))) # 0 reserved for ctc blank
+        self.id2char = dict(zip(range(1, len(self.voc)+1), self.voc))
+        self.char2id[ctc_blank] = 0
+        self.id2char[0] = ctc_blank
+        self.ctc_blank = ctc_blank
+        self.lowercase = lowercase
+        self.alphanumeric = alphanumeric
+        self.rec_num_classes = len(self.id2char)
+        self.return_list = return_list
+
+    def get_images(self, path):
+        ret = os.listdir(path)
+        ret = [join(path, i) for i in ret]
+        ret = [i for i in ret if splitext(i)[-1] in ('.jpg', '.jpeg', '.png')]
+        try:
+            ret.sort(key=lambda x:int(splitext(basename(x))[0]))
+        except:
+            ret.sort()
+        return ret
+
+    def __len__(self):
+        return self.nSamples
+
+    def __getitem__(self, index):
+        assert index < len(self), 'index range error'
+        images = self.get_images(self.root)
+        try:
+            img = Image.open(images[index]).convert('L')
+        except IOError:
+            print('Corrupted image for {}'.format(index))
+            return self[index+1]
+        # img_key = b'image-%09d' % index
+        # imgbuf = self.txn.get(img_key)
+
+        # buf = six.BytesIO()
+        # buf.write(imgbuf)
+        # buf.seek(0)
+        # try:
+        #     img = Image.open(buf).convert('L')
+        # except IOError:
+        #     print('Corrupted image for %d' % index)
+        #     return self[index + 1]
+
+        if self.transform is not None:
+            img = self.transform(img)
+
+        # label_key = b'label-%09d' % index
+        # word = self.txn.get(label_key).decode()
+        word = basename(images[index])
+
+        # file_key = b'fname-%09d' % index
+        # fname = self.txn.get(file_key).decode()
+
+        if self.label_transform is not None:
+            word = self.label_transform(word)
+        if self.return_list:
+            return [img, word, img.size(2)]
+        return img, word, img.size(2)
 
 class lmdbDataset(data.Dataset):
     def __init__(self, root, voc, num_samples=np.inf,
