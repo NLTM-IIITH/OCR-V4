@@ -148,9 +148,9 @@ if __name__ == "__main__":
 	parser.add_argument('--alphabet', type=str, default='0123456789abcdefghijklmnopqrstuvwxyz*')
 	parser.add_argument('--pretrained', default='', help="path to pretrained model (to continue training)")
 	parser.add_argument('--out_dir', type=str, default="out", help='predictions folder')
-	parser.add_argument('--lang', help='path to dataset')
+	parser.add_argument('--language', help='path to dataset')
 
 	opt = parser.parse_args()
-	opt.alphabet = f'{opt.lang}_lexicon.txt'
+	opt.alphabet = f'{opt.language}_lexicon.txt'
 	obj = BaseHTR(opt)
 	# obj.run()
