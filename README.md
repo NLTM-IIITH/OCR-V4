@@ -25,12 +25,12 @@ python3 lang_train.py --mode test --lang bengali --valRoot  bengali/test_lmdb --
 
 ## Inference (New)
 
-For Inference please call the `new_infer.py` file. The OCR outputs are generated in TXT file and saved in the directory specified by `out_dir` argument.
+For Inference please call the `new_infer.py` file. The OCR outputs are generated in JSON file and saved in the directory specified by `out_dir` argument.
 
 ### Arguments
 * `--pretrained`: Path to pretrained model file (.pth)
 * `--test_root`: Path to directory with input images
-* `--out_dir`: Path to folder where TXT OCR output is saved.
+* `--out_dir`: Path to folder where JSON OCR output is saved.
 * `--language`: language of the input images
 
 ### Example
