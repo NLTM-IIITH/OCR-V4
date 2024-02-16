@@ -2,6 +2,8 @@ from __future__ import division, print_function
 
 import argparse
 import random
+import json
+import shutil
 
 import numpy as np
 import torch
@@ -118,15 +120,17 @@ class BaseHTR(object):
 				decoded_preds += list(decoded_pred)
 
 		directory = self.opt.out_dir
-		writepath1 = directory + '/' + "output" + ".txt" 
+		writepath1 = directory + '/' + "out" + ".json" 
 		print(writepath1)
-		with open(writepath1, 'w', encoding='utf-8') as f1:
-			for target, pred in zip(gts, decoded_preds):         
-				print(target, pred)
-				f1.write(str(target))
-				f1.write("\t")
-				f1.write(str(pred))
-				f1.write("\n") 
+		output = {}
+		for target, pred in zip(gts, decoded_preds):         
+			print(target, pred)
+			if str(target) == 'test_-1.jpg':
+				print('Discarding the test image used to workaround the single char output bug')
+				continue
+			output[str(target)] = str(pred)
+		with open(writepath1, 'w', encoding='utf-8') as f:
+			f.write(json.dumps(output, indent=4))
 		return
 
 
@@ -147,10 +151,17 @@ if __name__ == "__main__":
 	parser.add_argument('--gpu_id', type=str, default='0', help='gpu device ids')
 	parser.add_argument('--alphabet', type=str, default='0123456789abcdefghijklmnopqrstuvwxyz*')
 	parser.add_argument('--pretrained', default='', help="path to pretrained model (to continue training)")
-	parser.add_argument('--out_dir', type=str, default="out", help='predictions folder')
-	parser.add_argument('--language', help='path to dataset')
+	parser.add_argument('--out_dir', type=str, default="out", help='path to the output folder')
+	parser.add_argument('--language', help='Language of inference model to be called')
 
 	opt = parser.parse_args()
 	opt.alphabet = f'{opt.language}_lexicon.txt'
+	# Check if the workaround for the single character bug can be implemented
+	dest = ''
+	if os.path.exists('test_-1.jpg') and os.path.exists(opt.test_root):
+		print('test_-1.jpg is available. Automatically adding it to the test_root.')
+		dest = shutil.copy('./test_-1.jpg', opt.test_root)
 	obj = BaseHTR(opt)
-	# obj.run()
+	if dest and os.path.exists(dest):
+		os.remove(dest)
+		print('Removed the test_-1.jpg file.')
