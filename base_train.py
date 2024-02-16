@@ -15,7 +15,6 @@ import pdb
 import pickle
 import cv2
 import torchvision
-import matplotlib.pyplot as plt
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CyclicLR, StepLR
 from torchvision.transforms import Compose
 
